@@ -4,7 +4,6 @@ def write_file(working_directory, file_path, content):
     try:
         abs_wdir_path = os.path.abspath(working_directory)
         target_file = os.path.normpath(os.path.join(abs_wdir_path, file_path))
-        print(repr(target_file))
         valid_file_path =  os.path.commonpath([abs_wdir_path,target_file]) == abs_wdir_path
 
         if not valid_file_path:
