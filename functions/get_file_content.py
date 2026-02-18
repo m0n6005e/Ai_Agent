@@ -1,4 +1,21 @@
 import os
+from google.genai import types
+
+
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description="Gets and displays a files content in a specified directory relative to the working directory. Output truncated at 10000 charactors.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+		required=["file_path"],
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="Truncated content of file from path to file relative to the working directory",
+            ),
+        },
+    ),
+)
 
 def get_file_content(working_directory, file_path):
 	try:

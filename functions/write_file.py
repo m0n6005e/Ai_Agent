@@ -1,4 +1,28 @@
 import os
+from google.genai import types
+
+
+schema_write_file = types.FunctionDeclaration(
+    name="write_file",
+    description="writes content to file in a specified directory relative to the working directory. Output truncated at 10000 charactors.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+		required=["file_path", "content"],
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="Truncated content of file from path to file relative to the working directory",
+            ),
+            "content": types.Schema(
+                type=types.Type.STRING,
+                description="Content being read by function",
+            )
+        },
+    ),
+)
+
+
+
 
 def write_file(working_directory, file_path, content):
     try:
