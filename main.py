@@ -22,51 +22,64 @@ client = genai.Client(api_key=api_key)
 
 def main():
     #print("Hello from ai-agent!")
-
+    
     parser = argparse.ArgumentParser(description="Chatbot")
     parser.add_argument("user_prompt", type=str, help="User prompt") #
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
-
     messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])] 
 
-    response = client.models.generate_content(
-        model='gemini-2.5-flash', 
-        contents=messages,
-        config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt, temperature=0),
+    for i in range(20):
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash', 
+            contents=messages,
+            config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt, temperature=0),
 
-    )
-    if response.usage_metadata == None:
-        raise RuntimeError("API request failed")
+        )
 
-    if args.verbose == True:
-        print(f"User prompt: {args.user_prompt}") 
-        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+        if response.candidates:
+            for message in response.candidates:
+                messages.append(message.content)
 
-    if response.function_calls != None:
-        function_results = []
+        if response.usage_metadata == None:
+            raise RuntimeError("API request failed")
 
-        for function_call in response.function_calls:
-            function_call_result = call_function(function_call, verbose=args.verbose)
-            if not function_call_result.parts:
-                 raise Exception("No parts in result")
+        if args.verbose == True:
+            print(f"User prompt: {args.user_prompt}") 
+            print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+            print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+
+        if response.function_calls != None:
+            function_results = []
+
+            for function_call in response.function_calls:
+                function_call_result = call_function(function_call, verbose=args.verbose)
+                if not function_call_result.parts:
+                    raise Exception("No parts in result")
             
-            if not function_call_result.parts[0].function_response:
-                raise Exception("Not a FunctionResponse object")
+                if not function_call_result.parts[0].function_response:
+                    raise Exception("Not a FunctionResponse object")
             
-            if not function_call_result.parts[0].function_response.response:
-                raise Exception("response field not an object")
+                if not function_call_result.parts[0].function_response.response:
+                    raise Exception("response field not an object")
             
-            function_results.append(function_call_result.parts[0])
+                function_results.append(function_call_result.parts[0])
 
-            if args.verbose:
-                print(f"-> {function_call_result.parts[0].function_response.response}")
+                if args.verbose:
+                    print(f"-> {function_call_result.parts[0].function_response.response}")
+           
+            messages.append(types.Content(role="user", parts=function_results))   
+        else:
+            print(response.text)
+            break
 
-
+        
+     
     else:
-        print(response.text)
-
+        print("Max iterations reached...")
+        sys.exit(1)
+        
 
 if __name__ == "__main__":
     main()
